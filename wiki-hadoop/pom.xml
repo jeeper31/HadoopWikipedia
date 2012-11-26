@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase</artifactId>
-			<version>0.92.1</version>
+			<version>0.92.1-cdh4.1.2</version>
 		</dependency>
 
 
@@ -112,4 +112,10 @@
 			</plugin>
 		</plugins>
 	</build>
+	<repositories>
+		<repository>
+			<id>Cloudera Repo</id>
+			<url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+		</repository>
+	</repositories>
 </project>
