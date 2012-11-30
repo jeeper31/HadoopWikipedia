@@ -42,6 +42,7 @@ public class HBaseWikipediaImporter{
 		wikiJob.setNumReduceTasks(0);
 		FileInputFormat.addInputPath(wikiJob, new Path("/input/enwiki-20121001-pages-articles.xml"));
 		
-		 System.exit(wikiJob.waitForCompletion(true) ? 0 : 1);
+		System.exit(wikiJob.waitForCompletion(true) ? 0 : 1);
+		
 	}
 }
