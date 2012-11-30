@@ -45,7 +45,7 @@ public class WikipediaMapper_UT {
 		    
 		    NodeList nodes = (NodeList) result;
 		    for (int i = 0; i < nodes.getLength(); i++) {
-		        System.out.println(nodes.item(i).getNodeValue()); 
+		        System.out.println("Title: " + nodes.item(i).getNodeValue()); 
 		    }
 		
 		// Temperature ^^^^^
