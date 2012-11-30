@@ -15,7 +15,7 @@ import com.gaddieind.hadoop.inputformat.XmlInputFormat;
 import com.gaddieind.hadoop.wikipedia.mapper.WikipediaMapper;
 
 public class HBaseWikipediaImporter{
-
+	
 	public static void main(String[] args) throws Exception {
 		Configuration conf = HBaseConfiguration.create();
 		conf.set("hbase.master", "node1.gaddieind.com:60000");
