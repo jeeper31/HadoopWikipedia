@@ -1,24 +1,34 @@
 package com.gaddieind.hadoop.wikipedia.mapper;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
-import edu.umd.cloud9.collection.wikipedia.WikipediaPage;
 
-public class WikipediaMapper extends MapReduceBase implements
-		Mapper<LongWritable, WikipediaPage, Text, Text> {
+public class WikipediaMapper extends 
+		Mapper<LongWritable, Text, Text, Writable> {
 
 	private static final Logger LOG = Logger.getLogger(WikipediaMapper.class);
 
@@ -41,51 +51,82 @@ public class WikipediaMapper extends MapReduceBase implements
 	private static final Text articleContent = new Text();
 	private HTable table;
 
-	public void map(LongWritable key, WikipediaPage page,
-			OutputCollector<Text, Text> output, Reporter reporter)
-			throws IOException {
+	@Override
+    public void map(LongWritable offset, Text page, Context context) 
+    throws IOException {
 
-		reporter.incrCounter(PageTypes.TOTAL, 1);
+		context.getCounter(PageTypes.TOTAL).increment(1);
+		
+		LOG.info("The Page! " + page);
+		
+		try{
+		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+		 domFactory.setNamespaceAware(true); // never forget this!
+		    DocumentBuilder builder = domFactory.newDocumentBuilder();
+		    Document doc = builder.parse(new ByteArrayInputStream(StringUtils.trim(page.toString()).getBytes()));
 
-		if (page.isRedirect()) {
-			reporter.incrCounter(PageTypes.REDIRECT, 1);
+		    XPathFactory factory = XPathFactory.newInstance();
+		    XPath xpath = factory.newXPath();
+		    XPathExpression expr = xpath.compile("//page/id/text()");
+		    Object result = expr.evaluate(doc, XPathConstants.NODESET);
+		    
+		    NodeList nodes = (NodeList) result;
+		    for (int i = 0; i < nodes.getLength(); i++) {
+		    	LOG.info("Node: " + nodes.item(i).getNodeValue()); 
+		    }
+		}catch(Exception e){
+			LOG.error("You Suck!", e);
+		}
+
+		/*if (page.isRedirect()) {
+			context.getCounter(PageTypes.REDIRECT).increment(1);
 
 		} else if (page.isDisambiguation()) {
-			reporter.incrCounter(PageTypes.DISAMBIGUATION, 1);
+			context.getCounter(PageTypes.DISAMBIGUATION).increment(1);
 		} else if (page.isEmpty()) {
-			reporter.incrCounter(PageTypes.EMPTY, 1);
+			context.getCounter(PageTypes.EMPTY).increment(1);
 		} else if (page.isArticle()) {
-			reporter.incrCounter(PageTypes.ARTICLE, 1);
+			context.getCounter(PageTypes.ARTICLE).increment(1);
 
 			if (page.isStub()) {
-				reporter.incrCounter(PageTypes.STUB, 1);
+				context.getCounter(PageTypes.STUB).increment(1);
 			}
 
-			LOG.info("Found an article: " + page.getTitle());
+
+
+*/	
+		//	LOG.info("Found an article: " + page.getTitle());
 			//Insert into HBase
 			
-			Put put = new Put(page.getDocid().getBytes());
+			/*Put put = new Put(page.getDocid().getBytes());
 			put.add(ColumnFamilies.ARTICLE_INFO.name().getBytes(), ColumnQualifiers.TITLE.name().getBytes(), page.getTitle().getBytes());
 			put.add(ColumnFamilies.CONTENT.name().getBytes(), ColumnQualifiers.CONTENT.name().getBytes(), page.getContent().getBytes());
 			
 			
-			table.put(put);
+			try {
+				context.write(new ImmutableBytesWritable(page.getDocid().getBytes()), put);
+			} catch (InterruptedException e) {
+				LOG.error("Mapper Screwed up", e);
+			}*/
+			
+			
+			//table.put(put);
 			//articleName.set(page.getTitle().replaceAll("[\\r\\n]+", " "));
 			//articleContent.set(page.getContent().replaceAll("[\\r\\n]+", " "));
 
 			//output.collect(articleName, articleContent);
-		} else {
-			reporter.incrCounter(PageTypes.NON_ARTICLE, 1);
-		}
+		/*} else {
+			context.getCounter(PageTypes.NON_ARTICLE).increment(1);
+		}*/
 	}
 
-	public void configure(JobConf jc) {
+	/*public void configure(JobConf jc) {
 		super.configure(jc);
 		// Create the HBase table client once up-front and keep it around
 		// rather than create on each map invocation.
 		try {
 			Configuration hbConf = HBaseConfiguration.create();
-			hbConf.set("hbase.master", "node1.gaddieind.comr:60000");
+			hbConf.set("hbase.master", "node1.gaddieind.com:60000");
 			hbConf.set(HBASE_CONFIGURATION_ZOOKEEPER_QUORUM, "node1.gaddieind.com");
 			hbConf.set(HBASE_CONFIGURATION_ZOOKEEPER_CLIENTPORT, "2181");
 			this.table = new HTable(hbConf, "wikipedia");
@@ -93,12 +134,6 @@ public class WikipediaMapper extends MapReduceBase implements
 			LOG.error("Something Failed", e);
 			throw new RuntimeException("Failed HTable construction", e);
 		}
-	}
-
-	@Override
-	public void close() throws IOException {
-		super.close();
-		table.close();
-	}
+	}*/
 
 }
