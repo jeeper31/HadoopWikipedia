@@ -25,6 +25,12 @@
 
 
 		<!-- Hadoop main artifact -->
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-mapreduce-examples</artifactId>
+			<version>${hadoop.version}</version>
+			<scope>test</scope>
+		</dependency>
 		
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
